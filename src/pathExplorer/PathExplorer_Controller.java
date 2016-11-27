@@ -21,7 +21,7 @@ public class PathExplorer_Controller {
 	PathExplorer_Controller(PathExplorer_View pathExplorer_View) {
 		m_pathExplorer_View = pathExplorer_View;
 
-		createURLFieldListener();
+		createURLFieldActions();
 		createURLButtonActions();		
 		createWebEnigneListener();		
 		createToggleListener();
@@ -31,22 +31,16 @@ public class PathExplorer_Controller {
 		m_pathExplorer_View.m_loadURLButton.setOnAction(e -> loadURL(m_pathExplorer_View.m_urlField.getText()));
 	}
 	
-	private void createURLFieldListener(){
-		m_pathExplorer_View.m_urlField.setOnKeyPressed(new EventHandler<Event>()
+	private void createURLFieldActions(){
+		m_pathExplorer_View.m_urlField.setOnKeyPressed(new EventHandler<KeyEvent>()
 	    {
+			@Override
 			public void handle(KeyEvent keyEvent){
 	            if (keyEvent.getCode().equals(KeyCode.ENTER)){
 	            	loadURL(m_pathExplorer_View.m_urlField.getText());
 	            }
 	        }
 
-			@Override
-			public void handle(Event event) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			
 	    });
 	}
 		

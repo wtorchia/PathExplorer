@@ -6,13 +6,11 @@ import java.util.Scanner;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker.State;
-import javafx.event.Event;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import netscape.javascript.JSObject;
-
-
 
 public class PathExplorer_Controller {
 
@@ -22,28 +20,50 @@ public class PathExplorer_Controller {
 		m_pathExplorer_View = pathExplorer_View;
 
 		createURLFieldActions();
-		createURLButtonActions();		
-		createWebEnigneListener();		
+		createURLButtonActions();
+		createWebEnigneListener();
 		createToggleListener();
+		createLogButtonActions();
 	}
 
-	private void createURLButtonActions(){
+	private void createURLButtonActions() {
 		m_pathExplorer_View.m_loadURLButton.setOnAction(e -> loadURL(m_pathExplorer_View.m_urlField.getText()));
 	}
-	
-	private void createURLFieldActions(){
-		m_pathExplorer_View.m_urlField.setOnKeyPressed(new EventHandler<KeyEvent>()
-	    {
-			@Override
-			public void handle(KeyEvent keyEvent){
-	            if (keyEvent.getCode().equals(KeyCode.ENTER)){
-	            	loadURL(m_pathExplorer_View.m_urlField.getText());
-	            }
-	        }
 
-	    });
+	private void createURLFieldActions() {
+		m_pathExplorer_View.m_urlField.setOnKeyPressed(new EventHandler<KeyEvent>() {
+			@Override
+			public void handle(KeyEvent keyEvent) {
+				if (keyEvent.getCode().equals(KeyCode.ENTER)) {
+					loadURL(m_pathExplorer_View.m_urlField.getText());
+				}
+			}
+
+		});
 	}
-		
+
+	private void createLogButtonActions() {
+		m_pathExplorer_View.m_logButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				if (m_pathExplorer_View.m_statuDisplayTextArea.isVisible() == true) {
+
+					m_pathExplorer_View.m_statuDisplayTextArea.setVisible(false);
+					m_pathExplorer_View.m_statuDisplayTextArea.setManaged(false);	
+					
+					m_pathExplorer_View.m_logButton.setText("Show logs");
+				}
+				else{
+					m_pathExplorer_View.m_statuDisplayTextArea.setVisible(true);
+					m_pathExplorer_View.m_statuDisplayTextArea.setManaged(true);	
+					
+					m_pathExplorer_View.m_logButton.setText("Hide logs");					
+				}
+			}
+		});
+	}
+
 	private void createApplicationCallBack() {
 		JSObject window = (JSObject) m_pathExplorer_View.m_webEngine.executeScript("window");
 		window.setMember("app", new ApplicationCallback(this));
@@ -52,20 +72,20 @@ public class PathExplorer_Controller {
 	private void createToggleListener() {
 		m_pathExplorer_View.m_radioButtonEnable.selectedProperty().addListener(new ChangeListener<Boolean>() {
 			@Override
-			public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected, Boolean isNowSelected) {
+			public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected,
+					Boolean isNowSelected) {
 				if (isNowSelected) {
-					m_pathExplorer_View.m_webEngine.executeScript("var enableIntercept = false");					
+					m_pathExplorer_View.m_webEngine.executeScript("var enableIntercept = false");
+				} else {
+					m_pathExplorer_View.m_webEngine.executeScript("var enableIntercept = true");
 				}
-				else {
-					m_pathExplorer_View.m_webEngine.executeScript("var enableIntercept = true");				
-				}
-			}			
+			}
 		});
 	}
 
-	private void createWebEnigneListener() {		
+	private void createWebEnigneListener() {
 		m_pathExplorer_View.m_webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
-			
+
 			public void changed(ObservableValue ov, State oldState, State newState) {
 				if (newState == State.SUCCEEDED) {
 
@@ -77,10 +97,10 @@ public class PathExplorer_Controller {
 					addLogLine("Loading JS");
 
 					m_pathExplorer_View.m_webEngine.executeScript(javaScript);
-					
+
 					createApplicationCallBack();
 
-					if (m_pathExplorer_View.m_radioButtonEnable.isSelected()) {						
+					if (m_pathExplorer_View.m_radioButtonEnable.isSelected()) {
 						m_pathExplorer_View.m_webEngine.executeScript("var enableIntercept = false");
 					}
 
@@ -91,11 +111,13 @@ public class PathExplorer_Controller {
 					addLogLine("Failed to load URL");
 					addLogLine(m_pathExplorer_View.m_webEngine.getLoadWorker().getException().getMessage());
 					
+					displayPath("There was an error. Please see the logs for more detail.");
+
 				}
 				if (newState == State.SCHEDULED) {
 					addLogLine("Loading URL : " + m_pathExplorer_View.m_webEngine.locationProperty().getValue());
 
-					m_pathExplorer_View.m_urlField.setText(m_pathExplorer_View.m_webEngine.locationProperty().getValue());
+					displayPath(m_pathExplorer_View.m_webEngine.locationProperty().getValue());
 				}
 			}
 		});
@@ -109,8 +131,7 @@ public class PathExplorer_Controller {
 
 			if (item.contains("#")) {
 				path = "#" + item.split("#")[1];
-			} 
-			else {
+			} else {
 				path += " > ";
 				path += item;
 			}
@@ -120,10 +141,9 @@ public class PathExplorer_Controller {
 
 	public void loadURL(String URL) {
 
-		try{
+		try {
 			m_pathExplorer_View.m_webEngine.load(URL);
-		}
-		catch(Error error){
+		} catch (Error error) {
 			addLogLine(error.toString());
 		}
 	}

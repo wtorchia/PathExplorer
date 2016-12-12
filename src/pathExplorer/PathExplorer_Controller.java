@@ -19,12 +19,20 @@ public class PathExplorer_Controller {
 	PathExplorer_Controller(PathExplorer_View pathExplorer_View) {
 		m_pathExplorer_View = pathExplorer_View;
 
+		
+	}
+	
+	public void initialize()
+	{
 		createURLFieldActions();
 		createURLButtonActions();
 		createWebEnigneListener();
 		createToggleListener();
 		createLogButtonActions();
+		
+		loadURL(m_pathExplorer_View.m_urlField.getText());
 	}
+	
 
 	private void createURLButtonActions() {
 		m_pathExplorer_View.m_loadURLButton.setOnAction(e -> loadURL(m_pathExplorer_View.m_urlField.getText()));
@@ -94,7 +102,9 @@ public class PathExplorer_Controller {
 					Scanner scanner = new Scanner(inputStream).useDelimiter("\\A");
 					String javaScript = scanner.hasNext() ? scanner.next() : "";
 
-					addLogLine("Loading JS");
+					addLogLine("Loading utils");
+					
+					displayPath("Loading  utils ...");
 
 					m_pathExplorer_View.m_webEngine.executeScript(javaScript);
 
@@ -104,7 +114,9 @@ public class PathExplorer_Controller {
 						m_pathExplorer_View.m_webEngine.executeScript("var enableIntercept = false");
 					}
 
-					addLogLine("URL loaded");
+					addLogLine("Page loaded");
+					
+					displayPath("Page ready");
 				}
 
 				if (newState == State.FAILED) {
@@ -115,28 +127,14 @@ public class PathExplorer_Controller {
 
 				}
 				if (newState == State.SCHEDULED) {
-					addLogLine("Loading URL : " + m_pathExplorer_View.m_webEngine.locationProperty().getValue());
+					addLogLine("Loading page : " + m_pathExplorer_View.m_webEngine.locationProperty().getValue());
 
-					displayPath(m_pathExplorer_View.m_webEngine.locationProperty().getValue());
+					displayPath("Loading page ...");
+					
+					m_pathExplorer_View.m_urlField.setText(m_pathExplorer_View.m_webEngine.locationProperty().getValue());
 				}
 			}
 		});
-	}
-
-	public void sendMsg(String msg) {
-
-		String[] parseMSGArray = msg.split(",");
-		String path = "";
-		for (String item : parseMSGArray) {
-
-			if (item.contains("#")) {
-				path = "#" + item.split("#")[1];
-			} else {
-				path += " > ";
-				path += item;
-			}
-		}
-		displayPath(path);
 	}
 
 	public void loadURL(String URL) {

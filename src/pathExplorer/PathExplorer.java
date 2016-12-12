@@ -9,11 +9,14 @@ public class PathExplorer extends Application {
 	@Override
 	public void start(Stage stage) {		
 		
-		PathExplorer_Controller pathExplorer_Controller = new PathExplorer_Controller(new PathExplorer_View());	
+		PathExplorer_View pathExplorer_view = new PathExplorer_View();
+		pathExplorer_view.initialize();
 		
-		Scene scene = new Scene(pathExplorer_Controller.m_pathExplorer_View.m_mainVBox);
-
-		//stage.setTitle("EE Path Explorer");
+		PathExplorer_Controller pathExplorer_controller = new PathExplorer_Controller(pathExplorer_view);	
+		pathExplorer_controller.initialize();
+		
+		Scene scene = new Scene(pathExplorer_controller.m_pathExplorer_View.m_mainVBox);
+		
 		stage.setWidth(1000);
 		stage.setHeight(700);
 		stage.setScene(scene);

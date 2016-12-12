@@ -15,6 +15,7 @@ public class ApplicationCallback {
     	
     	String[] parseMSGArray = msg.split(",");
     	String path = "";
+    	
     	for(String item : parseMSGArray){
     		
     		if(item.contains("#")){
@@ -25,6 +26,9 @@ public class ApplicationCallback {
 				path += item;	
     		}
     	}
+    	
     	m_pathExplorer_Controller.displayPath(path);
+    	 
+    	m_pathExplorer_Controller.addLogLine("Clicked element: \n   " + path);
     }
 }

@@ -7,9 +7,15 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 
@@ -17,8 +23,9 @@ public class PathExplorer_View {
 	private HBox m_browserPane;
 	private SplitPane m_pathPane;
 	private SplitPane m_conrtolPane;
-
-	public VBox m_LogPane;
+	
+	private Border m_borderStyle = new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, null));
+	
 	public VBox m_mainVBox;
 
 	public WebEngine m_webEngine;
@@ -31,13 +38,19 @@ public class PathExplorer_View {
 	public RadioButton m_radioButtonDisable;
 	public Button m_logButton;
 
-	PathExplorer_View() {		
+	PathExplorer_View() 
+	{		
+		
+	}
+	
+	public void initialize()
+	{
 		m_browserPane = createBrowserPane();
 		m_pathPane = createPathPane();
 		m_conrtolPane = createControlPane();
-
 		m_mainVBox = createLayout();
 	}
+	
 
 	private VBox createLayout() {
 		HBox hBox = new HBox();
@@ -62,10 +75,11 @@ public class PathExplorer_View {
 		m_statuDisplayTextArea = new TextArea();				
 		m_statuDisplayTextArea.setVisible(false);
 		m_statuDisplayTextArea.setManaged(false);	
+		m_statuDisplayTextArea.setMinWidth(300);
 		
-		hBox.getChildren().addAll(m_statuDisplayTextArea, browser);
+		hBox.getChildren().addAll(browser,m_statuDisplayTextArea );
 		
-		hBox.setMargin(m_statuDisplayTextArea, new Insets(0,5,0,0));	
+		HBox.setMargin(m_statuDisplayTextArea, new Insets(5,5,5,5));	
 
 		return hBox;
 	}
@@ -75,9 +89,13 @@ public class PathExplorer_View {
 		SplitPane splitPane = new SplitPane();
 
 		m_pathTextField = new TextField();
-
+		m_pathTextField.setFont(Font.font("Verdana", FontWeight.BOLD, 18));
+		m_pathTextField.setMinHeight(50);
+				
 		splitPane.getItems().addAll(m_pathTextField);
 
+		splitPane.setBorder(m_borderStyle);
+		
 		return splitPane;
 	}
 	
@@ -114,7 +132,9 @@ public class PathExplorer_View {
 									m_radioButtonDisable, 
 									m_radioButtonEnable, 
 									m_logButton);
-
+		
+		splitPane.setBorder(m_borderStyle);
+		
 		return splitPane;
 	}
 

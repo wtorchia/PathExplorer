@@ -1,23 +1,31 @@
 package pathExplorer;
 
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 
 public class PathExplorer_View {
-	private SplitPane m_URLPane;
-	private SplitPane m_browserPane;
+	private HBox m_browserPane;
 	private SplitPane m_pathPane;
-
-	private VBox m_conrtolPane;
+	private SplitPane m_conrtolPane;
+	
+	private Border m_borderStyle = new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, null));
+	
 	public VBox m_mainVBox;
 
 	public WebEngine m_webEngine;
@@ -28,39 +36,52 @@ public class PathExplorer_View {
 	public Button m_loadURLButton;
 	public RadioButton m_radioButtonEnable;
 	public RadioButton m_radioButtonDisable;
+	public Button m_logButton;
 
-	PathExplorer_View() {
-		m_URLPane = createURLPane();
+	PathExplorer_View() 
+	{		
+		
+	}
+	
+	public void initialize()
+	{
 		m_browserPane = createBrowserPane();
 		m_pathPane = createPathPane();
 		m_conrtolPane = createControlPane();
-
 		m_mainVBox = createLayout();
 	}
+	
 
 	private VBox createLayout() {
 		HBox hBox = new HBox();
 		HBox.setHgrow(m_browserPane, Priority.ALWAYS);
-		hBox.getChildren().addAll(m_conrtolPane, m_browserPane);
+		hBox.getChildren().addAll(m_browserPane);
 
 		VBox mainVbox = new VBox();
 		VBox.setVgrow(hBox, Priority.ALWAYS);
-		mainVbox.getChildren().addAll(m_URLPane, hBox, m_pathPane);
+		mainVbox.getChildren().addAll(m_conrtolPane, hBox, m_pathPane);
 
 		return mainVbox;
 	}
 
-	private SplitPane createBrowserPane() {
+	private HBox createBrowserPane() {
 		WebView browser = new WebView();
 		m_webEngine = browser.getEngine();
 
-		SplitPane splitPane = new SplitPane();
-		splitPane.getItems().addAll(browser);
+		HBox hBox = new HBox();
+		
+		HBox.setHgrow(browser, Priority.ALWAYS);		
+		
+		m_statuDisplayTextArea = new TextArea();				
+		m_statuDisplayTextArea.setVisible(false);
+		m_statuDisplayTextArea.setManaged(false);	
+		m_statuDisplayTextArea.setMinWidth(300);
+		
+		hBox.getChildren().addAll(browser,m_statuDisplayTextArea );
+		
+		HBox.setMargin(m_statuDisplayTextArea, new Insets(5,5,5,5));	
 
-		splitPane.setMaxHeight(Double.MAX_VALUE);
-		splitPane.setMaxWidth(Double.MAX_VALUE);
-
-		return splitPane;
+		return hBox;
 	}
 
 	private SplitPane createPathPane() {
@@ -68,50 +89,53 @@ public class PathExplorer_View {
 		SplitPane splitPane = new SplitPane();
 
 		m_pathTextField = new TextField();
-
+		m_pathTextField.setFont(Font.font("Verdana", FontWeight.BOLD, 18));
+		m_pathTextField.setMinHeight(50);
+				
 		splitPane.getItems().addAll(m_pathTextField);
 
+		splitPane.setBorder(m_borderStyle);
+		
 		return splitPane;
 	}
+	
 
-	private SplitPane createURLPane() {
-
+	private SplitPane createControlPane() {
 		SplitPane splitPane = new SplitPane();
-
+		
 		m_urlField = new TextField();
 		m_urlField.setText("https://www.experts-exchange.com/");
 
-		m_loadURLButton = new Button();
-		m_loadURLButton.setText("Open URL");
+		m_loadURLButton = new Button("Open URL");
 		m_loadURLButton.setMaxWidth(100);
-		m_loadURLButton.setMinWidth(100);
-
-		splitPane.getItems().addAll(m_loadURLButton, m_urlField);
-
-		return splitPane;
-	}
-
-	private VBox createControlPane() {
-		VBox vBox = new VBox();
-		vBox.setMaxWidth(150);
-
+		m_loadURLButton.setMinWidth(100);		
+		
 		ToggleGroup toggleGroup = new ToggleGroup();
 
 		m_radioButtonEnable = new RadioButton("Enable links");
 		m_radioButtonEnable.setToggleGroup(toggleGroup);
-		
+		m_radioButtonEnable.setMaxWidth(100);
+		m_radioButtonEnable.setMinWidth(100);
 
 		m_radioButtonDisable = new RadioButton("Disable links");
 		m_radioButtonDisable.setToggleGroup(toggleGroup);
 		m_radioButtonDisable.setSelected(true);
+		m_radioButtonDisable.setMaxWidth(100);
+		m_radioButtonDisable.setMinWidth(100);	
 
-		m_statuDisplayTextArea = new TextArea();
+		m_logButton = new Button("Show logs");
+		m_logButton.setMaxWidth(100);
+		m_logButton.setMinWidth(100);		
 
-		VBox.setVgrow(m_statuDisplayTextArea, Priority.ALWAYS);
-
-		vBox.getChildren().addAll(m_radioButtonDisable, m_radioButtonEnable,  m_statuDisplayTextArea);
-
-		return vBox;
+		splitPane.getItems().addAll(m_loadURLButton, 
+									m_urlField, 
+									m_radioButtonDisable, 
+									m_radioButtonEnable, 
+									m_logButton);
+		
+		splitPane.setBorder(m_borderStyle);
+		
+		return splitPane;
 	}
 
 }

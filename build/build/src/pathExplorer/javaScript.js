@@ -1,6 +1,7 @@
 var previousEvent = null;
 var previousElemetOutline = null;
 var enableIntercept = true;
+var highlightColor = "red";
 
 document.addEventListener('click', intercept);
 document.addEventListener('onclick', intercept);
@@ -12,7 +13,7 @@ function intercept(event) {
 	}
 	previousEvent = event;
 	previousElemetOutLine = event.target.style.outline;
-	event.target.style.outline = 'solid blue 5px';
+	event.target.style.outline = 'solid ' + highlightColor + ' 5px';
 	var evt = event ? event : window.event;
 	var path = getDomPath(event.target);
 	app.sendMsg(path);

@@ -1,7 +1,7 @@
 var previousEvent = null;
 var previousElemetOutline = null;
-var enableIntercept = true;
-var highlightColor = "red";
+var enableIntercept;
+var highlightColor;
 
 document.addEventListener('click', intercept);
 document.addEventListener('onclick', intercept);

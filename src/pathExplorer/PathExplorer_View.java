@@ -42,6 +42,7 @@ public class PathExplorer_View {
 	public Button m_loadURLButton;
 	public Button m_settingButton;
 	public ComboBox m_colorComboBox;
+	public Button m_backButton;
 
 	PathExplorer_View() 
 	{		
@@ -59,7 +60,8 @@ public class PathExplorer_View {
 	}
 	
 
-	private VBox createLayout() {
+	private VBox createLayout() 
+	{
 		HBox hBox = new HBox();
 		HBox.setHgrow(m_browserPane, Priority.ALWAYS);
 		hBox.getChildren().addAll(m_settingPane, m_browserPane);
@@ -92,7 +94,8 @@ public class PathExplorer_View {
 	}
 	
 	
-	private HBox createBrowserPane() {
+	private HBox createBrowserPane() 
+	{
 		WebView browser = new WebView();
 		m_webEngine = browser.getEngine();
 
@@ -106,14 +109,15 @@ public class PathExplorer_View {
 	}
 
 	
-	private SplitPane createPathPane() {
+	private SplitPane createPathPane()
+	{
 
 		SplitPane splitPane = new SplitPane();
 
 		m_pathTextField = new TextField();
 		m_pathTextField.setFont(Font.font("Verdana", FontWeight.BOLD, 18));
 		m_pathTextField.setMinHeight(50);
-				
+								
 		splitPane.getItems().addAll(m_pathTextField);
 
 		splitPane.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, BorderWidths.FULL)));
@@ -122,7 +126,8 @@ public class PathExplorer_View {
 	}
 	
 	
-	public SplitPane createURLPane(){
+	public SplitPane createURLPane()
+	{
 		SplitPane splitPane = new SplitPane();
 		
 		m_urlField = new TextField();		
@@ -133,9 +138,13 @@ public class PathExplorer_View {
 		
 		m_settingButton = new Button("Settings");
 		m_settingButton.setMaxWidth(100);
-		m_settingButton.setMinWidth(100);		
+		m_settingButton.setMinWidth(100);	
 		
-		splitPane.getItems().addAll(m_loadURLButton, m_urlField, m_settingButton);
+		m_backButton = new Button("Back");
+		m_backButton.setMaxWidth(100);
+		m_backButton.setMinWidth(100);
+		
+		splitPane.getItems().addAll(m_loadURLButton, m_urlField, m_backButton, m_settingButton);
 		
 		splitPane.setBorder(m_borderStyle);
 		
@@ -143,7 +152,8 @@ public class PathExplorer_View {
 	}
 	
 
-	private VBox createSettingPane() {
+	private VBox createSettingPane() 
+	{
 		VBox vBox = new VBox();		
 		int minWidth = 150;		
 		

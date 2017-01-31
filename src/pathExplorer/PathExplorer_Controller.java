@@ -3,6 +3,7 @@ package pathExplorer;
 import java.io.InputStream;
 import java.util.Scanner;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -13,19 +14,22 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import netscape.javascript.JSObject;
 
-public class PathExplorer_Controller {
+public class PathExplorer_Controller 
+{
 
 	private PathExplorer_View m_view;
 	private PathExplorer_Model m_model;
 
 	
-	PathExplorer_Controller(PathExplorer_View pathExplorer_View, PathExplorer_Model pathExplorer_model) {
+	PathExplorer_Controller(PathExplorer_View pathExplorer_View, PathExplorer_Model pathExplorer_model) 
+	{
 		m_view = pathExplorer_View;
 		m_model = pathExplorer_model;
 	}
 
 	
-	public void initialize() {
+	public void initialize() 
+	{
 		//Create event listeners
 		createURLFieldButtonAction();
 		createURLButtonAction();
@@ -34,6 +38,7 @@ public class PathExplorer_Controller {
 		createStayOnPageCheckBoxListener();
 		createLogCheckBoxListener();
 		createColorComboBoxListener();
+		createBackButtonAction();
 
 		//Set initial state of view.
 		m_view.m_interceptCheckBox.setSelected(m_model.m_stayOnPage);
@@ -49,27 +54,50 @@ public class PathExplorer_Controller {
 	
 	
 	private void createColorComboBoxListener(){
-		m_view.m_colorComboBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener(){
+		m_view.m_colorComboBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener()
+		{
 
 			@Override
-			public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+			public void changed(ObservableValue observable, Object oldValue, Object newValue) 
+			{
 				setHighlightColor();
 				
 			}
 		});			
 	}
 	
+	private void createBackButtonAction()
+	{
+		m_view.m_backButton.setOnAction(new EventHandler<ActionEvent>()
+		{
+
+			@Override
+			public void handle(ActionEvent event) 
+			{
+				m_view.m_webEngine.executeScript("history.back()");
+			}
+		});
+		
+		
+		
+	}
 	
-	private void createURLButtonAction() {
+	
+	private void createURLButtonAction() 
+	{
 		m_view.m_loadURLButton.setOnAction(e -> loadURL(m_view.m_urlField.getText()));
 	}
 
 	
-	private void createURLFieldButtonAction() {
-		m_view.m_urlField.setOnKeyPressed(new EventHandler<KeyEvent>() {
+	private void createURLFieldButtonAction() 
+	{
+		m_view.m_urlField.setOnKeyPressed(new EventHandler<KeyEvent>()
+		{
 			@Override
-			public void handle(KeyEvent keyEvent) {
-				if (keyEvent.getCode().equals(KeyCode.ENTER)) {
+			public void handle(KeyEvent keyEvent) 
+			{
+				if (keyEvent.getCode().equals(KeyCode.ENTER))
+				{
 					loadURL(m_view.m_urlField.getText());
 				}
 			}
@@ -78,19 +106,24 @@ public class PathExplorer_Controller {
 	}
 	
 	
-	private void createStayOnPageCheckBoxListener() {
-		m_view.m_interceptCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+	private void createStayOnPageCheckBoxListener() 
+	{
+		m_view.m_interceptCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() 
+		{
 
 			@Override
-			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
+			{
 				
-				if (m_view.m_interceptCheckBox.selectedProperty().get()) {
+				if (m_view.m_interceptCheckBox.selectedProperty().get())
+				{
 
 					m_model.m_stayOnPage = true;
 					m_view.m_webEngine.executeScript("var enableIntercept = true");
 					
 				}
-				else{
+				else
+				{
 					m_model.m_stayOnPage = false;
 					m_view.m_webEngine.executeScript("var enableIntercept = false");
 				}				
@@ -100,17 +133,22 @@ public class PathExplorer_Controller {
 	}
 	
 	
-	private void createLogCheckBoxListener() {
-		m_view.m_showLogsCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+	private void createLogCheckBoxListener() 
+	{
+		m_view.m_showLogsCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() 
+		{
 			@Override
-			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) 
+			{
 				
 
-				if (m_view.m_showLogsCheckBox.selectedProperty().get()) {
+				if (m_view.m_showLogsCheckBox.selectedProperty().get()) 
+				{
 
 					m_model.m_showLogs = true;					
 				} 
-				else{
+				else
+				{
 					m_model.m_showLogs = false;					
 				}
 						
@@ -121,17 +159,23 @@ public class PathExplorer_Controller {
 	}
 
 	
-	private void createSettingButtonAction() {
-		m_view.m_settingButton.setOnAction(new EventHandler<ActionEvent>() {
+	private void createSettingButtonAction() 
+	{
+		m_view.m_settingButton.setOnAction(new EventHandler<ActionEvent>()
+		{
 
 			@Override
-			public void handle(ActionEvent event) {
-				if (m_view.m_settingPane.isVisible() == true) {
+			public void handle(ActionEvent event) 
+			{
+				if (m_view.m_settingPane.isVisible() == true) 
+				{
 
 					m_view.m_settingPane.setVisible(false);
 					m_view.m_settingPane.setManaged(false);
 					
-				} else {
+				} 
+				else 
+				{
 					
 					m_view.m_settingPane.setVisible(true);
 					m_view.m_settingPane.setManaged(true);
@@ -141,17 +185,22 @@ public class PathExplorer_Controller {
 	}
 
 	
-	private void createApplicationCallBack() {
+	private void createApplicationCallBack() 
+	{
 		JSObject window = (JSObject) m_view.m_webEngine.executeScript("window");
 		window.setMember("app", new ApplicationCallback(this));
 	}
 
 	
-	private void createWebEnigneListener() {
-		m_view.m_webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
+	private void createWebEnigneListener()
+	{
+		m_view.m_webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
+		{
 
-			public void changed(ObservableValue ov, State oldState, State newState) {
-				if (newState == State.SUCCEEDED) {
+			public void changed(ObservableValue ov, State oldState, State newState)
+			{
+				if (newState == State.SUCCEEDED) 
+				{
 
 					InputStream inputStream = PathExplorer.class.getResourceAsStream("javaScript.js");
 
@@ -166,10 +215,12 @@ public class PathExplorer_Controller {
 
 					createApplicationCallBack();
 
-					if (m_model.m_stayOnPage) {
+					if (m_model.m_stayOnPage) 
+					{
 						m_view.m_webEngine.executeScript("var enableIntercept = true");						
 					}
-					else{
+					else
+					{
 						m_view.m_webEngine.executeScript("var enableIntercept = false");						
 					}
 					
@@ -179,18 +230,19 @@ public class PathExplorer_Controller {
 
 					displayPath(m_model.m_pageReadyMessage);
 				}
-				else if (newState == State.FAILED) {
+				else if (newState == State.FAILED) 
+				{
 					addLogLine("Failed to load URL");
 					addLogLine(m_view.m_webEngine.getLoadWorker().getException().getMessage());
 
 					displayPath("There was an error. Please see the logs for more detail.");
 
 				}
-				else if (newState == State.SCHEDULED) {
+				else if (newState == State.SCHEDULED)
+				{
 					addLogLine(m_model.m_loadingMessage);
-					addLogLine(m_view.m_webEngine.locationProperty().getValue());
-
 					displayPath(m_model.m_loadingMessage);
+					addLogLine("Opening URL : " + m_view.m_webEngine.locationProperty().getValue());
 
 					m_view.m_urlField.setText(m_view.m_webEngine.locationProperty().getValue());
 				}
@@ -199,7 +251,8 @@ public class PathExplorer_Controller {
 	}
 
 	
-	private void setHighlightColor(){
+	private void setHighlightColor()
+	{
 		
 		String highlightColor = m_view.m_colorComboBox.getSelectionModel().getSelectedItem().toString();
 	
@@ -207,22 +260,26 @@ public class PathExplorer_Controller {
 	}
 	
 	
-	public void loadURL(String URL) {
-
-		try {
+	public void loadURL(String URL) 
+	{
+		try 
+		{
 			m_view.m_webEngine.load(URL);
-		} catch (Error error) {
+		} 
+		catch (Error error) {
 			addLogLine(error.toString());
 		}
 	}
 
 	
-	public void displayPath(String path) {
+	public void displayPath(String path) 
+	{
 		m_view.m_pathTextField.setText(path);
 	}
 	
 
-	public void addLogLine(String logLine) {
+	public void addLogLine(String logLine) 
+	{
 		m_view.m_logTextArea.appendText(logLine + "\n");
 	}
 }

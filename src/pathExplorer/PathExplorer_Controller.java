@@ -1,7 +1,12 @@
 package pathExplorer;
 
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.Scanner;
+
+import com.sun.javafx.fxml.builder.URLBuilder;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -10,8 +15,12 @@ import javafx.collections.FXCollections;
 import javafx.concurrent.Worker.State;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Pos;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
 import netscape.javascript.JSObject;
 
 public class PathExplorer_Controller 
@@ -19,7 +28,9 @@ public class PathExplorer_Controller
 
 	private PathExplorer_View m_view;
 	private PathExplorer_Model m_model;
-
+	private boolean m_forceGoBack = false;
+	private WebEngine m_webEngine;
+	
 	
 	PathExplorer_Controller(PathExplorer_View pathExplorer_View, PathExplorer_Model pathExplorer_model) 
 	{
@@ -28,8 +39,10 @@ public class PathExplorer_Controller
 	}
 
 	
-	public void initialize() 
+	public void initialize() throws Exception 
 	{
+		m_webEngine = m_view.m_browser.getEngine();
+		
 		//Create event listeners
 		createURLFieldButtonAction();
 		createURLButtonAction();
@@ -40,6 +53,8 @@ public class PathExplorer_Controller
 		createColorComboBoxListener();
 		createBackButtonAction();
 
+		
+		
 		//Set initial state of view.
 		m_view.m_interceptCheckBox.setSelected(m_model.m_stayOnPage);
 		
@@ -48,7 +63,9 @@ public class PathExplorer_Controller
 		m_view.m_colorComboBox.setItems(FXCollections.observableArrayList( m_model.m_highlightColorsList.values()));
 		m_view.m_colorComboBox.getSelectionModel().selectFirst();		
 		
-		m_view.m_urlField.setText(m_model.m_defaultURL);
+		m_webEngine.setUserAgent(m_model.USERAGENT);
+		
+		m_view.m_urlField.setText(m_model.DEFAULT_URL);
 		loadURL(m_view.m_urlField.getText());
 	}
 	
@@ -70,22 +87,35 @@ public class PathExplorer_Controller
 	{
 		m_view.m_backButton.setOnAction(new EventHandler<ActionEvent>()
 		{
-
 			@Override
 			public void handle(ActionEvent event) 
 			{
-				m_view.m_webEngine.executeScript("history.back()");
+				if(m_webEngine.getHistory().getEntries().size() > 1)
+				{
+					showLoadingDialog();
+					m_webEngine.executeScript("history.back()");
+				}
+				
 			}
-		});
-		
-		
-		
+		});		
 	}
 	
 	
-	private void createURLButtonAction() 
+	private void createURLButtonAction() throws Exception 
 	{
-		m_view.m_loadURLButton.setOnAction(e -> loadURL(m_view.m_urlField.getText()));
+		m_view.m_loadURLButton.setOnAction(e -> {
+			try
+			{
+				m_forceGoBack = false;
+				
+				loadURL(m_view.m_urlField.getText());
+			}
+			catch (Exception exception)
+			{
+				displayPath("There was an error. Please see the logs for more detail.");
+				addLogLine(exception.toString());
+			}
+		});
 	}
 
 	
@@ -98,7 +128,17 @@ public class PathExplorer_Controller
 			{
 				if (keyEvent.getCode().equals(KeyCode.ENTER))
 				{
-					loadURL(m_view.m_urlField.getText());
+					try 
+					{
+						m_forceGoBack = false;
+				
+						loadURL(m_view.m_urlField.getText());
+					} 
+					catch (Exception exception)
+					{
+						displayPath("There was an error. Please see the logs for more detail.");
+						addLogLine(exception.toString());
+					}
 				}
 			}
 
@@ -119,13 +159,13 @@ public class PathExplorer_Controller
 				{
 
 					m_model.m_stayOnPage = true;
-					m_view.m_webEngine.executeScript("var enableIntercept = true");
+					m_webEngine.executeScript("var enableIntercept = true");
 					
 				}
 				else
 				{
 					m_model.m_stayOnPage = false;
-					m_view.m_webEngine.executeScript("var enableIntercept = false");
+					m_webEngine.executeScript("var enableIntercept = false");
 				}				
 			}
 
@@ -175,10 +215,9 @@ public class PathExplorer_Controller
 					
 				} 
 				else 
-				{
-					
+				{					
 					m_view.m_settingPane.setVisible(true);
-					m_view.m_settingPane.setManaged(true);
+					m_view.m_settingPane.setManaged(true);					
 				}
 			}
 		});
@@ -187,64 +226,80 @@ public class PathExplorer_Controller
 	
 	private void createApplicationCallBack() 
 	{
-		JSObject window = (JSObject) m_view.m_webEngine.executeScript("window");
+		JSObject window = (JSObject) m_webEngine.executeScript("window");
 		window.setMember("app", new ApplicationCallback(this));
 	}
 
 	
 	private void createWebEnigneListener()
 	{
-		m_view.m_webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
+		m_webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
 		{
 
 			public void changed(ObservableValue ov, State oldState, State newState)
 			{
 				if (newState == State.SUCCEEDED) 
 				{
+					if(!m_forceGoBack && m_model.m_stayOnPage)
+					{
+						m_forceGoBack = true;						
+					}
+					else if(m_forceGoBack && m_model.m_stayOnPage)
+					{
+						showLoadingDialog();
+						m_forceGoBack = false;	
+						m_webEngine.executeScript("history.back()");
+					}
 
 					InputStream inputStream = PathExplorer.class.getResourceAsStream("javaScript.js");
 
 					Scanner scanner = new Scanner(inputStream).useDelimiter("\\A");
 					String javaScript = scanner.hasNext() ? scanner.next() : "";
 
-					addLogLine(m_model.m_loadingMessage);
+					addLogLine(m_model.LOADING_MESSAGE);
 
-					displayPath(m_model.m_loadingMessage);
+					displayPath(m_model.LOADING_MESSAGE);
 
-					m_view.m_webEngine.executeScript(javaScript);
+					m_webEngine.executeScript(javaScript);
 
 					createApplicationCallBack();
 
 					if (m_model.m_stayOnPage) 
 					{
-						m_view.m_webEngine.executeScript("var enableIntercept = true");						
+						m_webEngine.executeScript("var enableIntercept = true");						
 					}
 					else
 					{
-						m_view.m_webEngine.executeScript("var enableIntercept = false");						
+						m_webEngine.executeScript("var enableIntercept = false");						
 					}
 					
 					setHighlightColor();
 					
-					addLogLine(m_model.m_pageReadyMessage);
+					addLogLine(m_model.PAGE_READY_MESSAGE);
 
-					displayPath(m_model.m_pageReadyMessage);
+					displayPath(m_model.PAGE_READY_MESSAGE);
+					
+					hideLoadingDialog();
 				}
 				else if (newState == State.FAILED) 
 				{
 					addLogLine("Failed to load URL");
-					addLogLine(m_view.m_webEngine.getLoadWorker().getException().getMessage());
+					addLogLine(m_webEngine.getLoadWorker().getException().getMessage());
 
 					displayPath("There was an error. Please see the logs for more detail.");
 
 				}
 				else if (newState == State.SCHEDULED)
 				{
-					addLogLine(m_model.m_loadingMessage);
-					displayPath(m_model.m_loadingMessage);
-					addLogLine("Opening URL : " + m_view.m_webEngine.locationProperty().getValue());
-
-					m_view.m_urlField.setText(m_view.m_webEngine.locationProperty().getValue());
+					showLoadingDialog();
+				
+					
+					addLogLine(m_model.LOADING_MESSAGE);
+					displayPath(m_model.LOADING_MESSAGE);
+					
+					addLogLine("Opening URL : " + m_webEngine.locationProperty().getValue());
+	
+					m_view.m_urlField.setText(m_webEngine.locationProperty().getValue());					
 				}
 			}
 		});
@@ -256,15 +311,51 @@ public class PathExplorer_Controller
 		
 		String highlightColor = m_view.m_colorComboBox.getSelectionModel().getSelectedItem().toString();
 	
-		m_view.m_webEngine.executeScript("var highlightColor = '" + highlightColor + "'");
+		m_webEngine.executeScript("var highlightColor = '" + highlightColor + "'");
 	}
 	
 	
-	public void loadURL(String URL) 
+	private String formatURL(String requestedURL) throws Exception
+	{
+		URL url;
+		
+		String[] parseRequest = requestedURL.split("://");
+		
+		if(parseRequest.length == 2)
+		{
+			url = new URL(requestedURL);
+		}
+		else
+		{
+			url = new URL("http://" + requestedURL);
+		}
+		
+		
+		return url.toString();
+	}
+	
+	
+	private void showLoadingDialog()
+	{
+		if(!m_view.m_browserPane.getChildren().contains(m_view.m_progressIndicatorVBox))
+		{
+			m_view.m_browserPane.getChildren().add(m_view.m_progressIndicatorVBox);
+		}
+	}
+	
+	private void hideLoadingDialog()
+	{
+		m_view.m_browserPane.getChildren().remove(m_view.m_progressIndicatorVBox);
+	}
+	
+	
+	public void loadURL(String URL) throws Exception 
 	{
 		try 
 		{
-			m_view.m_webEngine.load(URL);
+			showLoadingDialog();
+			 
+			m_webEngine.load(formatURL(URL));
 		} 
 		catch (Error error) {
 			addLogLine(error.toString());

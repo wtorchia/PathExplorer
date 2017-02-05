@@ -7,14 +7,16 @@ public class PathExplorer_Model {
 	public HighlightColorsEnum m_highlightColorsList; 
 	
 	public boolean m_showLogs; 
-	public boolean m_showSetting;
-	public boolean m_followLinks;
+	public boolean m_showSetting;	
 	public boolean m_stayOnPage;
 	
-	public String m_loadingMessage = "Loading utils";
-	public String m_pageReadyMessage = "Page ready";
-	public String m_defaultURL = "https://www.experts-exchange.com/";
+	final public String LOADING_MESSAGE = "Loading utils";
+	final public String PAGE_READY_MESSAGE = "Page ready";
+	final public String DEFAULT_URL = "https://experts-exchange.com";
+	final public String USERAGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36";
+	
 	public String m_hightlightColor;
+	
 	
 	PathExplorer_Model()
 	{

@@ -1,9 +1,11 @@
 package pathExplorer;
 
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -13,6 +15,7 @@ import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -24,7 +27,7 @@ public class PathExplorer_View {
 
 	private Border m_borderStyle = new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, null));
 	
-	private HBox m_browserPane;
+	
 	private SplitPane m_pathPane;
 	private SplitPane m_urlPane;
 	private HBox m_logPane;
@@ -32,8 +35,10 @@ public class PathExplorer_View {
 	public VBox m_settingPane;
 	public VBox m_mainVBox;
 
-	public WebEngine m_webEngine;
+	//public WebEngine m_webEngine;
 
+	public StackPane m_browserPane;
+	
 	public TextArea m_logTextArea;
 	public TextField m_pathTextField;
 	public TextField m_urlField;	
@@ -42,7 +47,11 @@ public class PathExplorer_View {
 	public Button m_loadURLButton;
 	public Button m_settingButton;
 	public ComboBox m_colorComboBox;
-	public Button m_backButton;
+	public Button m_backButton;	
+	public VBox m_progressIndicatorVBox;
+	public WebView m_browser;
+	
+	
 
 	PathExplorer_View() 
 	{		
@@ -52,8 +61,7 @@ public class PathExplorer_View {
 	public void initialize()
 	{
 		m_browserPane = createBrowserPane();
-		m_pathPane = createPathPane();
-		m_settingPane = createSettingPane();
+		m_pathPane = createPathPane();		
 		m_urlPane = createURLPane();
 		m_logPane = createLogPane();
 		m_mainVBox = createLayout();
@@ -64,7 +72,7 @@ public class PathExplorer_View {
 	{
 		HBox hBox = new HBox();
 		HBox.setHgrow(m_browserPane, Priority.ALWAYS);
-		hBox.getChildren().addAll(m_settingPane, m_browserPane);
+		hBox.getChildren().addAll(m_browserPane);
 
 		VBox mainVbox = new VBox();
 		VBox.setVgrow(hBox, Priority.ALWAYS);		
@@ -77,8 +85,7 @@ public class PathExplorer_View {
 	
 	private HBox createLogPane()
 	{
-		HBox hBox = new HBox();
-		
+		HBox hBox = new HBox();		
 		
 		m_logTextArea = new TextArea();				
 		m_logTextArea.setVisible(false);
@@ -94,20 +101,40 @@ public class PathExplorer_View {
 	}
 	
 	
-	private HBox createBrowserPane() 
+	private StackPane createBrowserPane() 
 	{
-		WebView browser = new WebView();
-		m_webEngine = browser.getEngine();
-
-		HBox hBox = new HBox();
+		m_browser = new WebView();		
 		
-		HBox.setHgrow(browser, Priority.ALWAYS);		
+		StackPane stackPane = new StackPane();		
 	
-		hBox.getChildren().addAll(browser);
+		ProgressIndicator progressIndicator = new ProgressIndicator();
 		
-		return hBox;
+		progressIndicator.setMinSize(300, 300);
+		
+		m_settingPane = createSettingPane();		
+		
+	    m_progressIndicatorVBox = new VBox(progressIndicator);
+	    m_progressIndicatorVBox.setAlignment(Pos.CENTER);	 	    
+	    m_progressIndicatorVBox.setStyle("-fx-background-color: rgba(128, 128, 128, 0.75);");
+		
+	    HBox hBox = new HBox();
+	    
+	    m_settingPane.setVisible(false);
+	    m_settingPane.setManaged(false);
+	    
+	
+	    
+	    hBox.getChildren().addAll( m_settingPane, m_browser );
+	    
+	    HBox.setHgrow(m_browser, Priority.ALWAYS);
+	    
+	    
+	    
+		stackPane.getChildren().addAll(hBox);
+		stackPane.setAlignment(Pos.TOP_LEFT);
+		
+		return stackPane;
 	}
-
 	
 	private SplitPane createPathPane()
 	{
@@ -177,10 +204,12 @@ public class PathExplorer_View {
 		vBox.getChildren().addAll(m_interceptCheckBox, m_showLogsCheckBox, colorComoBoxLabel, m_colorComboBox);
 		
 		vBox.setBorder(m_borderStyle);		
-		vBox.setMinWidth(minWidth);		
-		vBox.setManaged(false);
-		vBox.setVisible(false);
-	
+		vBox.setMinWidth(minWidth + 5);	
+		vBox.setMaxWidth(minWidth + 5);
+		
+		vBox.setStyle("-fx-background-color: rgba(256, 256, 256, 1);");		
+		vBox.setBorder(m_borderStyle);
+		
 		return vBox;
 	}
 }

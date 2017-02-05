@@ -7,7 +7,7 @@ import javafx.stage.Stage;
 public class PathExplorer extends Application {	
 	
 	@Override
-	public void start(Stage stage) {		
+	public void start(Stage stage) throws Exception {		
 		
 		PathExplorer_Model pathExplorer_model  = new PathExplorer_Model();
 		pathExplorer_model.initialize();		

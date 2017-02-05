@@ -6,13 +6,11 @@ var highlightColor;
 document.addEventListener('click', intercept, true);
 document.addEventListener('onclick', intercept, true);
 document.addEventListener('ondblclick', intercept, true);
-document.addEventListener('onmouseover', intercept, true);
-document.addEventListener('mouseover', intercept, true);
 
 function intercept(event) {
 
 	window.alert(event);
-	
+
 	if (previousEvent != null) {
 		previousEvent.target.style.outline = previousElemetOutline;
 	}
@@ -21,8 +19,8 @@ function intercept(event) {
 	event.target.style.outline = 'solid ' + highlightColor + ' 5px';
 	var evt = event ? event : window.event;
 	var path = getDomPath(event.target);
-	app.sendMsg(path);	
-	
+	app.sendMsg(path);
+
 	if (enableIntercept == true) {
 		event.preventDefault();
 		event.stopPropagation();

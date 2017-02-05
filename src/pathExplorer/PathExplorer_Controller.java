@@ -23,91 +23,88 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import netscape.javascript.JSObject;
 
-public class PathExplorer_Controller 
+public class PathExplorer_Controller
 {
 
 	private PathExplorer_View m_view;
 	private PathExplorer_Model m_model;
 	private boolean m_forceGoBack = false;
 	private WebEngine m_webEngine;
-	
-	
-	PathExplorer_Controller(PathExplorer_View pathExplorer_View, PathExplorer_Model pathExplorer_model) 
+
+	PathExplorer_Controller(PathExplorer_View pathExplorer_View, PathExplorer_Model pathExplorer_model)
 	{
 		m_view = pathExplorer_View;
 		m_model = pathExplorer_model;
 	}
 
-	
-	public void initialize() throws Exception 
+	public void initialize() throws Exception
 	{
 		m_webEngine = m_view.m_browser.getEngine();
-		
-		//Create event listeners
+
+		// Create event listeners
 		createURLFieldButtonAction();
 		createURLButtonAction();
-		createWebEnigneListener();		
-		createSettingButtonAction();			
+		createWebEnigneListener();
+		createSettingButtonAction();
 		createStayOnPageCheckBoxListener();
 		createLogCheckBoxListener();
 		createColorComboBoxListener();
 		createBackButtonAction();
+		createMouseOverheckBoxListener();
+		createGrowLogButtonAction();
+		createShrinkLogButtonAction();
 
-		
-		
-		//Set initial state of view.
+		// Set initial state of view.
 		m_view.m_interceptCheckBox.setSelected(m_model.m_stayOnPage);
-		
-		m_view.m_showLogsCheckBox.setSelected(m_model.m_showLogs);		
-		
-		m_view.m_colorComboBox.setItems(FXCollections.observableArrayList( m_model.m_highlightColorsList.values()));
-		m_view.m_colorComboBox.getSelectionModel().selectFirst();		
-		
+
+		m_view.m_showLogsCheckBox.setSelected(m_model.m_showLogs);
+
+		m_view.m_colorComboBox.setItems(FXCollections.observableArrayList(m_model.m_highlightColorsList.values()));
+		m_view.m_colorComboBox.getSelectionModel().selectFirst();
+
 		m_webEngine.setUserAgent(m_model.USERAGENT);
-		
+
 		m_view.m_urlField.setText(m_model.DEFAULT_URL);
 		loadURL(m_view.m_urlField.getText());
 	}
-	
-	
-	private void createColorComboBoxListener(){
+
+	private void createColorComboBoxListener()
+	{
 		m_view.m_colorComboBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener()
 		{
-
 			@Override
-			public void changed(ObservableValue observable, Object oldValue, Object newValue) 
+			public void changed(ObservableValue observable, Object oldValue, Object newValue)
 			{
 				setHighlightColor();
-				
 			}
-		});			
+		});
 	}
-	
+
 	private void createBackButtonAction()
 	{
 		m_view.m_backButton.setOnAction(new EventHandler<ActionEvent>()
 		{
 			@Override
-			public void handle(ActionEvent event) 
+			public void handle(ActionEvent event)
 			{
-				if(m_webEngine.getHistory().getEntries().size() > 1)
+				if (m_webEngine.getHistory().getEntries().size() > 1)
 				{
 					showLoadingDialog();
 					m_webEngine.executeScript("history.back()");
 				}
-				
+
 			}
-		});		
+		});
 	}
-	
-	
-	private void createURLButtonAction() throws Exception 
+
+	private void createURLButtonAction() throws Exception
 	{
-		m_view.m_loadURLButton.setOnAction(e -> {
+		m_view.m_loadURLButton.setOnAction(e ->
+		{
 			try
 			{
 				m_forceGoBack = false;
-				
+
 				loadURL(m_view.m_urlField.getText());
 			}
 			catch (Exception exception)
@@ -118,22 +115,21 @@ public class PathExplorer_Controller
 		});
 	}
 
-	
-	private void createURLFieldButtonAction() 
+	private void createURLFieldButtonAction()
 	{
 		m_view.m_urlField.setOnKeyPressed(new EventHandler<KeyEvent>()
 		{
 			@Override
-			public void handle(KeyEvent keyEvent) 
+			public void handle(KeyEvent keyEvent)
 			{
 				if (keyEvent.getCode().equals(KeyCode.ENTER))
 				{
-					try 
+					try
 					{
 						m_forceGoBack = false;
-				
+
 						loadURL(m_view.m_urlField.getText());
-					} 
+					}
 					catch (Exception exception)
 					{
 						displayPath("There was an error. Please see the logs for more detail.");
@@ -144,93 +140,146 @@ public class PathExplorer_Controller
 
 		});
 	}
-	
-	
-	private void createStayOnPageCheckBoxListener() 
+
+	private void createGrowLogButtonAction()
 	{
-		m_view.m_interceptCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() 
+		m_view.m_growLogButton.setOnAction(new EventHandler<ActionEvent>()
+		{
+			@Override
+			public void handle(ActionEvent event)
+			{
+
+				m_view.m_logPane.setMinHeight(m_view.m_logPane.getHeight() + 200);
+			}
+		});
+	}
+
+	private void createShrinkLogButtonAction()
+	{
+		m_view.m_shrinkLogButton.setOnAction(new EventHandler<ActionEvent>()
+		{
+			@Override
+			public void handle(ActionEvent event)
+			{
+				if (m_view.m_logPane.getHeight() - 200 >= m_model.MIN_LOG_HEIGHT)
+				{
+					m_view.m_logPane.setMinHeight(m_model.MIN_LOG_HEIGHT);
+				}
+				else
+				{
+					m_view.m_logPane.setMinHeight(m_view.m_logPane.getHeight() - 200);
+				}
+
+			}
+		});
+	}
+
+	private void createStayOnPageCheckBoxListener()
+	{
+		m_view.m_interceptCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>()
 		{
 
 			@Override
 			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
 			{
-				
+
 				if (m_view.m_interceptCheckBox.selectedProperty().get())
 				{
 
 					m_model.m_stayOnPage = true;
-					m_webEngine.executeScript("var enableIntercept = true");
-					
+					m_webEngine.executeScript(m_model.ENABLE_INTERCEPT_JS);
+
 				}
 				else
 				{
 					m_model.m_stayOnPage = false;
-					m_webEngine.executeScript("var enableIntercept = false");
-				}				
+					m_webEngine.executeScript(m_model.DISABLE_INTERCEPT_JS);
+				}
 			}
 
 		});
 	}
-	
-	
-	private void createLogCheckBoxListener() 
-	{
-		m_view.m_showLogsCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() 
-		{
-			@Override
-			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) 
-			{
-				
 
-				if (m_view.m_showLogsCheckBox.selectedProperty().get()) 
+	private void createMouseOverheckBoxListener()
+	{
+		m_view.m_mouseOverCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>()
+		{
+
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
+			{
+
+				if (m_view.m_mouseOverCheckBox.selectedProperty().get())
 				{
 
-					m_model.m_showLogs = true;					
-				} 
+					m_model.m_mouseOver = true;
+					m_webEngine.executeScript(m_model.ENABLE_MOUSEOVER_JS);
+
+				}
 				else
 				{
-					m_model.m_showLogs = false;					
+					m_model.m_mouseOver = false;
+					m_webEngine.executeScript(m_model.DISABLE_MOUSEOVER_JS);
 				}
-						
-				m_view.m_logTextArea.setVisible(m_model.m_showLogs);
-				m_view.m_logTextArea.setManaged(m_model.m_showLogs);				
+			}
+
+		});
+	}
+
+	private void createLogCheckBoxListener()
+	{
+		m_view.m_showLogsCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>()
+		{
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
+			{
+
+				if (m_view.m_showLogsCheckBox.selectedProperty().get())
+				{
+
+					m_model.m_showLogs = true;
+				}
+				else
+				{
+					m_model.m_showLogs = false;
+				}
+
+				m_view.m_logPane.setVisible(m_model.m_showLogs);
+				m_view.m_logPane.setManaged(m_model.m_showLogs);
 			}
 		});
 	}
 
-	
-	private void createSettingButtonAction() 
+	private void createSettingButtonAction()
 	{
 		m_view.m_settingButton.setOnAction(new EventHandler<ActionEvent>()
 		{
 
 			@Override
-			public void handle(ActionEvent event) 
+			public void handle(ActionEvent event)
 			{
-				if (m_view.m_settingPane.isVisible() == true) 
+				if (m_view.m_settingPane.isVisible() == true)
 				{
 
 					m_view.m_settingPane.setVisible(false);
 					m_view.m_settingPane.setManaged(false);
-					
-				} 
-				else 
-				{					
+
+				}
+				else
+				{
 					m_view.m_settingPane.setVisible(true);
-					m_view.m_settingPane.setManaged(true);					
+					m_view.m_settingPane.setManaged(true);
 				}
 			}
 		});
 	}
 
-	
-	private void createApplicationCallBack() 
+	private void createApplicationCallBack()
 	{
 		JSObject window = (JSObject) m_webEngine.executeScript("window");
 		window.setMember("app", new ApplicationCallback(this));
 	}
 
-	
 	private void createWebEnigneListener()
 	{
 		m_webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
@@ -238,16 +287,16 @@ public class PathExplorer_Controller
 
 			public void changed(ObservableValue ov, State oldState, State newState)
 			{
-				if (newState == State.SUCCEEDED) 
+				if (newState == State.SUCCEEDED)
 				{
-					if(!m_forceGoBack && m_model.m_stayOnPage)
+					if (!m_forceGoBack && m_model.m_stayOnPage)
 					{
-						m_forceGoBack = true;						
+						m_forceGoBack = true;
 					}
-					else if(m_forceGoBack && m_model.m_stayOnPage)
+					else if (m_forceGoBack && m_model.m_stayOnPage)
 					{
 						showLoadingDialog();
-						m_forceGoBack = false;	
+						m_forceGoBack = false;
 						m_webEngine.executeScript("history.back()");
 					}
 
@@ -264,24 +313,24 @@ public class PathExplorer_Controller
 
 					createApplicationCallBack();
 
-					if (m_model.m_stayOnPage) 
+					if (m_model.m_stayOnPage)
 					{
-						m_webEngine.executeScript("var enableIntercept = true");						
+						m_webEngine.executeScript("var enableIntercept = true");
 					}
 					else
 					{
-						m_webEngine.executeScript("var enableIntercept = false");						
+						m_webEngine.executeScript("var enableIntercept = false");
 					}
-					
+
 					setHighlightColor();
-					
+
 					addLogLine(m_model.PAGE_READY_MESSAGE);
 
 					displayPath(m_model.PAGE_READY_MESSAGE);
-					
+
 					hideLoadingDialog();
 				}
-				else if (newState == State.FAILED) 
+				else if (newState == State.FAILED)
 				{
 					addLogLine("Failed to load URL");
 					addLogLine(m_webEngine.getLoadWorker().getException().getMessage());
@@ -292,36 +341,33 @@ public class PathExplorer_Controller
 				else if (newState == State.SCHEDULED)
 				{
 					showLoadingDialog();
-				
-					
+
 					addLogLine(m_model.LOADING_MESSAGE);
 					displayPath(m_model.LOADING_MESSAGE);
-					
+
 					addLogLine("Opening URL : " + m_webEngine.locationProperty().getValue());
-	
-					m_view.m_urlField.setText(m_webEngine.locationProperty().getValue());					
+
+					m_view.m_urlField.setText(m_webEngine.locationProperty().getValue());
 				}
 			}
 		});
 	}
 
-	
 	private void setHighlightColor()
 	{
-		
+
 		String highlightColor = m_view.m_colorComboBox.getSelectionModel().getSelectedItem().toString();
-	
+
 		m_webEngine.executeScript("var highlightColor = '" + highlightColor + "'");
 	}
-	
-	
+
 	private String formatURL(String requestedURL) throws Exception
 	{
 		URL url;
-		
+
 		String[] parseRequest = requestedURL.split("://");
-		
-		if(parseRequest.length == 2)
+
+		if (parseRequest.length == 2)
 		{
 			url = new URL(requestedURL);
 		}
@@ -329,47 +375,43 @@ public class PathExplorer_Controller
 		{
 			url = new URL("http://" + requestedURL);
 		}
-		
-		
+
 		return url.toString();
 	}
-	
-	
+
 	private void showLoadingDialog()
 	{
-		if(!m_view.m_browserPane.getChildren().contains(m_view.m_progressIndicatorVBox))
+		if (!m_view.m_browserPane.getChildren().contains(m_view.m_progressIndicatorVBox))
 		{
 			m_view.m_browserPane.getChildren().add(m_view.m_progressIndicatorVBox);
 		}
 	}
-	
+
 	private void hideLoadingDialog()
 	{
 		m_view.m_browserPane.getChildren().remove(m_view.m_progressIndicatorVBox);
 	}
-	
-	
-	public void loadURL(String URL) throws Exception 
+
+	public void loadURL(String URL) throws Exception
 	{
-		try 
+		try
 		{
 			showLoadingDialog();
-			 
+
 			m_webEngine.load(formatURL(URL));
-		} 
-		catch (Error error) {
+		}
+		catch (Error error)
+		{
 			addLogLine(error.toString());
 		}
 	}
 
-	
-	public void displayPath(String path) 
+	public void displayPath(String path)
 	{
 		m_view.m_pathTextField.setText(path);
 	}
-	
 
-	public void addLogLine(String logLine) 
+	public void addLogLine(String logLine)
 	{
 		m_view.m_logTextArea.appendText(logLine + "\n");
 	}

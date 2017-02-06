@@ -25,7 +25,7 @@ import netscape.javascript.JSObject;
 
 public class PathExplorer_Controller
 {
-
+	private ApplicationCallback m_applicationCallback;
 	private PathExplorer_View m_view;
 	private PathExplorer_Model m_model;
 	private boolean m_forceGoBack = false;
@@ -95,6 +95,34 @@ public class PathExplorer_Controller
 
 			}
 		});
+	}
+
+	private void removeJSEventListeners()
+	{
+
+		m_webEngine.executeScript(m_model.DISABLE_MOUSECLICK_JS);
+		m_webEngine.executeScript(m_model.DISABLE_MOUSEONCLICK_JS);
+		m_webEngine.executeScript(m_model.DISABLE_MOUSEONDBCLICK_JS);
+
+		if (m_model.m_mouseOver)
+		{
+			m_webEngine.executeScript(m_model.DISABLE_MOUSEOVER_JS);
+		}
+
+	}
+
+	private void addJSEventListeners()
+	{
+		m_webEngine.executeScript(m_model.ENABLE_MOUSECLICK_JS);
+		m_webEngine.executeScript(m_model.ENABLE_MOUSEONCLICK_JS);
+		m_webEngine.executeScript(m_model.ENABLE_MOUSEONDBCLICK_JS);
+
+		if (m_model.m_mouseOver)
+		{
+			m_webEngine.executeScript(m_model.ENABLE_MOUSEOVER_JS);
+		}
+
+		createApplicationCallBack();
 	}
 
 	private void createURLButtonAction() throws Exception
@@ -182,6 +210,7 @@ public class PathExplorer_Controller
 			@Override
 			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
 			{
+				showLoadingDialog();
 
 				if (m_view.m_interceptCheckBox.selectedProperty().get())
 				{
@@ -195,6 +224,8 @@ public class PathExplorer_Controller
 					m_model.m_stayOnPage = false;
 					m_webEngine.executeScript(m_model.DISABLE_INTERCEPT_JS);
 				}
+
+				hideLoadingDialog();
 			}
 
 		});
@@ -209,18 +240,23 @@ public class PathExplorer_Controller
 			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
 			{
 
+				showLoadingDialog();
+
 				if (m_view.m_mouseOverCheckBox.selectedProperty().get())
 				{
 
 					m_model.m_mouseOver = true;
-					m_webEngine.executeScript(m_model.ENABLE_MOUSEOVER_JS);
+					removeJSEventListeners();
+					addJSEventListeners();
 
 				}
 				else
 				{
 					m_model.m_mouseOver = false;
-					m_webEngine.executeScript(m_model.DISABLE_MOUSEOVER_JS);
+					removeJSEventListeners();
+					addJSEventListeners();
 				}
+				hideLoadingDialog();
 			}
 
 		});
@@ -274,12 +310,6 @@ public class PathExplorer_Controller
 		});
 	}
 
-	private void createApplicationCallBack()
-	{
-		JSObject window = (JSObject) m_webEngine.executeScript("window");
-		window.setMember("app", new ApplicationCallback(this));
-	}
-
 	private void createWebEnigneListener()
 	{
 		m_webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
@@ -300,29 +330,11 @@ public class PathExplorer_Controller
 						m_webEngine.executeScript("history.back()");
 					}
 
-					InputStream inputStream = PathExplorer.class.getResourceAsStream("javaScript.js");
-
-					Scanner scanner = new Scanner(inputStream).useDelimiter("\\A");
-					String javaScript = scanner.hasNext() ? scanner.next() : "";
-
 					addLogLine(m_model.LOADING_MESSAGE);
 
 					displayPath(m_model.LOADING_MESSAGE);
 
-					m_webEngine.executeScript(javaScript);
-
-					createApplicationCallBack();
-
-					if (m_model.m_stayOnPage)
-					{
-						m_webEngine.executeScript("var enableIntercept = true");
-					}
-					else
-					{
-						m_webEngine.executeScript("var enableIntercept = false");
-					}
-
-					setHighlightColor();
+					registerJS();
 
 					addLogLine(m_model.PAGE_READY_MESSAGE);
 
@@ -355,10 +367,13 @@ public class PathExplorer_Controller
 
 	private void setHighlightColor()
 	{
+		showLoadingDialog();
 
 		String highlightColor = m_view.m_colorComboBox.getSelectionModel().getSelectedItem().toString();
 
 		m_webEngine.executeScript("var highlightColor = '" + highlightColor + "'");
+
+		hideLoadingDialog();
 	}
 
 	private String formatURL(String requestedURL) throws Exception
@@ -415,4 +430,42 @@ public class PathExplorer_Controller
 	{
 		m_view.m_logTextArea.appendText(logLine + "\n");
 	}
+
+	public void createApplicationCallBack()
+	{
+		JSObject window = (JSObject) m_webEngine.executeScript("window");
+
+		m_applicationCallback = new ApplicationCallback(this);
+
+		window.setMember("app", m_applicationCallback);
+	}
+
+	public void registerJS()
+	{
+		InputStream inputStream = PathExplorer.class.getResourceAsStream("javaScript.js");
+
+		Scanner scanner = new Scanner(inputStream).useDelimiter("\\A");
+		String javaScript = scanner.hasNext() ? scanner.next() : "";
+
+		m_webEngine.executeScript(javaScript);
+
+		if (m_model.m_stayOnPage)
+		{
+			m_webEngine.executeScript(m_model.ENABLE_INTERCEPT_JS);
+		}
+		else
+		{
+			m_webEngine.executeScript(m_model.DISABLE_INTERCEPT_JS);
+		}
+
+		if (m_model.m_mouseOver)
+		{
+			m_webEngine.executeScript(m_model.ENABLE_MOUSEOVER_JS);
+		}
+
+		setHighlightColor();
+
+		createApplicationCallBack();
+	}
+
 }

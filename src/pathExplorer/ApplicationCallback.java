@@ -28,9 +28,9 @@ public class ApplicationCallback
 				path += item;
 			}
 		}
-
-		m_pathExplorer_Controller.displayPath(path);
-
+				
+		m_pathExplorer_Controller.displayPath(path);		
+	
 		m_pathExplorer_Controller.addLogLine("Clicked element: \n   " + path);
 	}
 }

@@ -3,15 +3,12 @@ var previousElemetOutline = null;
 var enableIntercept;
 var highlightColor;
 
+
 document.addEventListener('click', intercept, true);
 document.addEventListener('onclick', intercept, true);
 document.addEventListener('ondblclick', intercept, true);
 
-
-
 function intercept(event) {
-
-	window.alert(event);
 	
 	if (previousEvent != null) {
 		previousEvent.target.style.outline = previousElemetOutline;
@@ -24,8 +21,7 @@ function intercept(event) {
 	app.sendMsg(path);	
 	
 	if (enableIntercept == true) {
-		event.preventDefault();
-		event.stopPropagation();
+		event.preventDefault();		
 	}
 }
 
